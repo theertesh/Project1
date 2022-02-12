@@ -1,0 +1,261 @@
+Model Binding Dropdownlist
+
+namespace CG_MVC_COREAPP.Models
+{
+    public enum coursename
+    {
+        ASP,JAVA,MVC,AJAX,MVCCORE
+    }
+    public class UserDet
+    {
+        public coursename selectcname { get; set; }
+    }
+}
+
+       public IActionResult dispddl()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult dispddl(UserDet obj)
+        {
+            ViewData["cname"] = obj.selectcname;
+            return View();
+        }
+
+@model CG_MVC_COREAPP.Models.UserDet
+
+<h2>Model binding DDL</h2>
+
+@using (Html.BeginForm("dispddl", "Example", FormMethod.Post))
+{
+    <label>Select courseName:</label>
+
+    @Html.DropDownList("selectcname", new SelectList(Enum.GetValues(typeof(coursename))), "--Select coursename--")
+    <input type="submit" value="submit" />
+}
+
+<b>
+    you have selected:@ViewData["cname"]
+</b>
+
+
+
+Checkbox model binding
+
+
+namespace CG_MVC_COREAPP.Models
+{
+    public class CityModel
+    {
+        public int value { get; set; }
+        public string text { get; set; }
+        public bool ischecked { get; set; }
+
+        public List<CityModel> cities { get; set; }
+    }
+}
+
+ public IActionResult dispcheck()
+        {
+            List<CityModel> obj = new List<CityModel>() { 
+              new CityModel{value=1,text="Bangalore",ischecked=true},
+              new CityModel{value=2,text="Delhi",ischecked=false},
+              new CityModel{value=3,text="Chennai",ischecked=false},
+              new CityModel{value=4,text="Pune",ischecked=false}
+            };
+            CityModel Cmodel = new CityModel();
+            Cmodel.cities = obj;
+            return View(Cmodel);
+        }
+
+        [HttpPost]
+        public IActionResult dispcheck(CityModel obj)
+        {
+            StringBuilder str = new StringBuilder();
+            foreach(var city in obj.cities)
+            {
+                if(city.ischecked)
+                {
+                    str.Append(city.text + ",");
+                }
+            }
+            ViewData["jobloc"] = str;
+            return View("joblocation");
+        }
+
+@model CG_MVC_COREAPP.Models.CityModel
+
+<h2>Job Location Details</h2>
+
+@using (Html.BeginForm("dispcheck", "Example", FormMethod.Post))
+{
+    for (int i = 0; i < Model.cities.Count; i++)
+    {
+        @Html.CheckBoxFor(m => m.cities[i].ischecked)
+        @Model.cities[i].text
+        @Html.HiddenFor(m => m.cities[i].text)
+        @Html.HiddenFor(m => m.cities[i].value)
+        <br />
+    }
+    <input type="submit" value="submit" />
+}
+
+
+<strong>
+    You Have selected Job Location:@ViewData["jobloc"]
+</strong>
+
+State-management technique:
+
+HTTP ->"stateless protocol"
+
+ 2 types 
+
+client-side:Cookies
+
+Cookies->
+It is client-side management technique.
+Data stored in cookies in not secured.
+Cookies can stored data in bytes.
+
+
+2 types of cookie
+Persistance->has the life time.
+non-Persistance->does not have life time.
+
+  [HttpPost]
+        public IActionResult createcookie(string t1)
+        {
+            string username = t1;
+            CookieOptions option = new CookieOptions();
+            option.Expires = System.DateTime.Now.AddMinutes(30); //peristance
+            Response.Cookies.Append("UserName", username,option);
+            return View("createcookie");
+        }
+
+        public IActionResult deletecookie()
+        {
+            Response.Cookies.Delete("UserName");
+            return View("createcookie");
+        }
+
+
+@model string
+
+@if(!string.IsNullOrEmpty(Model))
+{
+    <strong>
+        Welcome:@Model
+    </strong>
+    @Html.ActionLink("Remove cookie","deletecookie")
+}
+else
+            {
+              @using(Html.BeginForm("createcookie","Example"))
+                {
+                   <label>Enter your name:</label>
+                   <input type="text" name="t1"/> <br />
+                   <input type="submit" value="createcookie" />
+                }
+            }
+
+
+
+server-side:session
+
+Session:
+Server-side state-manangement technique.
+Session data is stored in server.
+Data stored in session in highly secured.
+Large amount of data can be stored in session.
+
+Add "aspnetcore.session" middleware to .NETcore app.
+
+public IActionResult stdata()
+        {
+            HttpContext.Session.SetString("Emp_Details", "E01116,XXXX,S/W DEVELOPER");
+            HttpContext.Session.SetInt32("Pro_Details", 56000);
+            return View();
+        }
+
+
+        public IActionResult readdata()
+        {
+            ViewData["empdet"] = HttpContext.Session.GetString("Emp_Details");
+            ViewData["prodet"] = HttpContext.Session.GetInt32("Pro_Details");
+            return View();
+        }
+
+    @using(Html.BeginForm("readdata","Example"))
+            {
+                <input type="submit" value="Readsession" />
+            }
+
+
+<b>
+    Session Data <br />
+    Employee Details:@ViewData["empdet"] <br />
+    Product Details: @ViewData["prodet"]
+</b> 
+
+
+
+Middleware in .NETCORE:
+It is a "component class" which is executed on every request of .NET-CORE application
+
+Pipeline in .NETCORE:
+Pipeline in component of .NETCORE application,where the request processing happens.
+.NETCORE request processing pipeline consists of a number of middlewares.
+every middleware is executed one after the other.
+
+
+ViewData
+->It is used to transfer data from controller to view.
+->ViewData inherited by ViewDataDictionary class
+->ViewData["data1"] = "this is view data storage";
+->compile-time checker.
+ int x = ViewData["data1"];
+->data will be lost if redirection occurs.
+
+TempData
+->It is used to transfer data from controller to view.
+->TempData is from ITempDataDictionary interface.
+-> TempData["data2"] = "this is temp data storage";
+->compile-time checker.
+->data will be lost if redirection occurs.
+
+ViewBag
+->It is used to transfer data from controller to view.
+->It is Dynamic object.
+-> ViewBag.data3 = "this is view bag data";
+->run-time checker.
+ int a = ViewBag.data3;
+->data will be lost if redirection occurs.
+
+  public IActionResult printdata()
+        {
+            ViewData["data1"] = "this is view data storage";
+            TempData["data2"] = "this is temp data storage";
+            ViewBag.data3 = "this is view bag data";
+            return View();
+        }
+
+
+@ViewData["data1"]
+<br />
+@TempData["data2"]
+<br />
+
+@ViewBag.data3
+
+@Html.ActionLink("go to new page", "form1")
+
+
+
+
+
+
+
+
